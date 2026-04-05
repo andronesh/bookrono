@@ -2,9 +2,9 @@
 #include "Button.h"
 #include <NimBLEDevice.h>
 
-const int GREEN_LED_PIN = 2;
-const int YELLOW_LED_PIN = 3;
-const int RED_LED_PIN = 4;
+const int GREEN_LED_PIN = 8;
+const int YELLOW_LED_PIN = 9;
+const int RED_LED_PIN = 10;
 
 const char* SERVICE_UUID        = "00000000-1111-2222-3333-123456789abc";
 const char* COMMAND_CHAR_UUID   = "cccccccc-1111-2222-3333-123456789abc";
@@ -140,12 +140,20 @@ static void onButtonMultipleClickCb(void *button_handle, void *usr_data) {
     sendEvent("triple click");
 }
 
-void setup() {
-    Serial.begin(115200);
-
+void initLeds() {
     pinMode(GREEN_LED_PIN, OUTPUT);
     pinMode(YELLOW_LED_PIN, OUTPUT);
     pinMode(RED_LED_PIN, OUTPUT);
+
+    digitalWrite(GREEN_LED_PIN, LOW);
+    digitalWrite(YELLOW_LED_PIN, LOW);
+    digitalWrite(RED_LED_PIN, LOW);
+}
+
+void setup() {
+    Serial.begin(115200);
+
+    initLeds();
 
     Button *btn = new Button(GPIO_NUM_10, false);
 
