@@ -6,6 +6,8 @@ const int GREEN_LED_PIN = 8;
 const int YELLOW_LED_PIN = 9;
 const int RED_LED_PIN = 10;
 
+const gpio_num_t BUTTON_PIN = GPIO_NUM_5;
+
 const char* SERVICE_UUID        = "00000000-1111-2222-3333-123456789abc";
 const char* COMMAND_CHAR_UUID   = "cccccccc-1111-2222-3333-123456789abc";
 const char* EVENT_CHAR_UUID     = "eeeeeeee-1111-2222-3333-123456789abc";
@@ -150,12 +152,8 @@ void initLeds() {
     digitalWrite(RED_LED_PIN, LOW);
 }
 
-void setup() {
-    Serial.begin(115200);
-
-    initLeds();
-
-    Button *btn = new Button(GPIO_NUM_10, false);
+void initButton() {
+    Button *btn = new Button(BUTTON_PIN, false);
 
     btn->attachPressDownEventCb(&onButtonPressDownCb, NULL);
     btn->attachPressUpEventCb(&onButtonPressUpCb, NULL);
@@ -164,7 +162,13 @@ void setup() {
     btn->attachLongPressStartEventCb(&onButtonLongPressStartCb, NULL);
     btn->attachLongPressUpEventCb(&onButtonLongPressUpCb, NULL);
     btn->attachMultipleClickEventCb(&onButtonMultipleClickCb, 3, NULL);
+}
 
+void setup() {
+    Serial.begin(115200);
+
+    initLeds();
+    initButton();
     initBLE();
 
     // btn->setParam(button_param_t param, void *value);
