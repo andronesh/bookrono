@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "Button.h"
 #include <NimBLEDevice.h>
+#include <TFT_eSPI.h>
+#include <lvgl.h>
 
 const int GREEN_LED_PIN = 8;
 const int YELLOW_LED_PIN = 9;
@@ -19,6 +21,9 @@ NimBLECharacteristic* eventChar;
 bool bleServiceRunning = false;
 bool bleServiceAdvertising = false;
 bool deviceConnected = false;
+
+TFT_eSPI tft = TFT_eSPI();
+static lv_color_t buf[284 * 20]; // partial buffer
 
 class ServerCallbacks : public NimBLEServerCallbacks {
 
@@ -164,9 +169,46 @@ void initButton() {
     btn->attachMultipleClickEventCb(&onButtonMultipleClickCb, 3, NULL);
 }
 
+void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
+    uint32_t w = (area->x2 - area->x1 + 1);
+    uint32_t h = (area->y2 - area->y1 + 1);
+
+    tft.startWrite();
+    tft.setAddrWindow(area->x1, area->y1, w, h);
+    tft.pushColors((uint16_t *)px_map, w * h, true);
+    tft.endWrite();
+
+    lv_display_flush_ready(disp);
+}
+
+void drawInitialUI() {
+    lv_obj_t *greetingsLabel = lv_label_create(lv_screen_active());
+    lv_label_set_text(greetingsLabel, "Привіт LVGL 9.5.0!");
+    lv_obj_set_style_text_font(greetingsLabel, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_color(greetingsLabel, lv_color_white(), 0);
+    lv_obj_align(greetingsLabel, LV_ALIGN_TOP_MID, 0, 8);
+}
+
+void initDisplay() {
+    tft.init();
+    tft.invertDisplay(false);
+    tft.setRotation(3);
+
+    lv_init();
+    lv_display_t *disp = lv_display_create(284, 76);
+    lv_display_set_buffers(disp, buf, NULL, sizeof(buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    lv_display_set_flush_cb(disp, my_disp_flush);
+
+    lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_COVER, LV_PART_MAIN);
+
+    drawInitialUI();
+}
+
 void setup() {
     Serial.begin(115200);
 
+    initDisplay();
     initLeds();
     initButton();
     initBLE();
@@ -178,7 +220,6 @@ void setup() {
 }
 
 void loop() {
-    delay(1000);
-    Serial.printf("   BLE advertising %s\n", NimBLEDevice::getAdvertising()->isAdvertising() ? "true" : "false");
-    Serial.printf("   device connected %s\n\n", deviceConnected ? "true" : "false");
+    lv_timer_handler();
+    delay(5);
 }
