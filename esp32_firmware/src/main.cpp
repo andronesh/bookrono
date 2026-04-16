@@ -13,6 +13,9 @@ const gpio_num_t BUTTON_LEFT_PIN = GPIO_NUM_3;
 const gpio_num_t BUTTON_MIDDLE_PIN = GPIO_NUM_2;
 const gpio_num_t BUTTON_RIGHT_PIN = GPIO_NUM_1;
 
+int counter = 0;
+lv_obj_t *counterLabel;
+
 const char* SERVICE_UUID        = "00000000-1111-2222-3333-123456789abc";
 const char* COMMAND_CHAR_UUID   = "cccccccc-1111-2222-3333-123456789abc";
 const char* EVENT_CHAR_UUID     = "eeeeeeee-1111-2222-3333-123456789abc";
@@ -150,16 +153,27 @@ static void onButtonMultipleClickCb(void *button_handle, void *usr_data) {
     sendEvent("triple click");
 }
 
+void updateCounterLabel() {
+    lv_label_set_text(counterLabel, std::to_string(counter).c_str());
+    Serial.printf("--- counter should be %d\n", counter);
+}
+
 static void onLeftButtonPressDownCb(void *button_handle, void *usr_data) {
     Serial.println("    LEFT pressed down");
+    counter -= 15;
+    updateCounterLabel();
 }
 
 static void onMiddleButtonPressDownCb(void *button_handle, void *usr_data) {
     Serial.println("    MIDDLE pressed down");
+    counter = 0;
+    updateCounterLabel();
 }
 
 static void onRightButtonPressDownCb(void *button_handle, void *usr_data) {
     Serial.println("    RIGHT pressed down");
+    counter += 15;
+    updateCounterLabel();
 }
 
 
@@ -212,6 +226,17 @@ void drawInitialUI() {
     lv_obj_set_style_text_font(greetingsLabel, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(greetingsLabel, lv_color_white(), 0);
     lv_obj_align(greetingsLabel, LV_ALIGN_TOP_MID, 0, 8);
+
+    counterLabel = lv_label_create(lv_screen_active());
+    lv_label_set_text(counterLabel, std::to_string(counter).c_str());
+    lv_obj_set_style_text_font(counterLabel, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_color(counterLabel, lv_color_white(), 0);
+
+    lv_obj_align_to(counterLabel, greetingsLabel, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+}
+
+static uint32_t my_tick_CB(void) {
+    return millis();
 }
 
 void initDisplay() {
@@ -223,6 +248,7 @@ void initDisplay() {
     lv_display_t *disp = lv_display_create(284, 76);
     lv_display_set_buffers(disp, buf, NULL, sizeof(buf), LV_DISPLAY_RENDER_MODE_PARTIAL);
     lv_display_set_flush_cb(disp, my_disp_flush);
+    lv_tick_set_cb(my_tick_CB);
 
     lv_obj_set_style_bg_color(lv_screen_active(), lv_color_black(), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_COVER, LV_PART_MAIN);
