@@ -8,7 +8,10 @@ const int GREEN_LED_PIN = 8;
 const int YELLOW_LED_PIN = 9;
 const int RED_LED_PIN = 10;
 
-const gpio_num_t BUTTON_PIN = GPIO_NUM_5;
+const gpio_num_t BUTTON_BIG_PIN = GPIO_NUM_5;
+const gpio_num_t BUTTON_LEFT_PIN = GPIO_NUM_3;
+const gpio_num_t BUTTON_MIDDLE_PIN = GPIO_NUM_2;
+const gpio_num_t BUTTON_RIGHT_PIN = GPIO_NUM_1;
 
 const char* SERVICE_UUID        = "00000000-1111-2222-3333-123456789abc";
 const char* COMMAND_CHAR_UUID   = "cccccccc-1111-2222-3333-123456789abc";
@@ -147,6 +150,19 @@ static void onButtonMultipleClickCb(void *button_handle, void *usr_data) {
     sendEvent("triple click");
 }
 
+static void onLeftButtonPressDownCb(void *button_handle, void *usr_data) {
+    Serial.println("    LEFT pressed down");
+}
+
+static void onMiddleButtonPressDownCb(void *button_handle, void *usr_data) {
+    Serial.println("    MIDDLE pressed down");
+}
+
+static void onRightButtonPressDownCb(void *button_handle, void *usr_data) {
+    Serial.println("    RIGHT pressed down");
+}
+
+
 void initLeds() {
     pinMode(GREEN_LED_PIN, OUTPUT);
     pinMode(YELLOW_LED_PIN, OUTPUT);
@@ -157,8 +173,8 @@ void initLeds() {
     digitalWrite(RED_LED_PIN, LOW);
 }
 
-void initButton() {
-    Button *btn = new Button(BUTTON_PIN, false);
+void initButtons() {
+    Button *btn = new Button(BUTTON_BIG_PIN, false);
 
     btn->attachPressDownEventCb(&onButtonPressDownCb, NULL);
     btn->attachPressUpEventCb(&onButtonPressUpCb, NULL);
@@ -167,6 +183,15 @@ void initButton() {
     btn->attachLongPressStartEventCb(&onButtonLongPressStartCb, NULL);
     btn->attachLongPressUpEventCb(&onButtonLongPressUpCb, NULL);
     btn->attachMultipleClickEventCb(&onButtonMultipleClickCb, 3, NULL);
+
+    Button *leftBtn = new Button(BUTTON_LEFT_PIN, false);
+    leftBtn->attachPressDownEventCb(&onLeftButtonPressDownCb, NULL);
+
+    Button *middleBtn = new Button(BUTTON_MIDDLE_PIN, false);
+    middleBtn->attachPressDownEventCb(&onMiddleButtonPressDownCb, NULL);
+
+    Button *rightBtn = new Button(BUTTON_RIGHT_PIN, false);
+    rightBtn->attachPressDownEventCb(&onRightButtonPressDownCb, NULL);
 }
 
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map) {
@@ -210,7 +235,7 @@ void setup() {
 
     initDisplay();
     initLeds();
-    initButton();
+    initButtons();
     initBLE();
 
     // btn->setParam(button_param_t param, void *value);
